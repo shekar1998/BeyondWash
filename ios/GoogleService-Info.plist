@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1033960115720-pe4dj6sdv9fde1mat5li7ma9rmr0gkbq.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1033960115720-pe4dj6sdv9fde1mat5li7ma9rmr0gkbq</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>1033960115720-cmlr0mf2a80pivrptmevlvn5bjci0qrc.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBh8tJVMALDkgjLiy22epVeq9TLB2Mc_qw</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1033960115720</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.beyondwash</string>
+	<key>PROJECT_ID</key>
+	<string>beyondwash-c2b4f</string>
+	<key>STORAGE_BUCKET</key>
+	<string>beyondwash-c2b4f.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1033960115720:ios:3b13bca934e6764a33cbbd</string>
+	<key>DATABASE_URL</key>
+	<string>https://beyondwash-c2b4f-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

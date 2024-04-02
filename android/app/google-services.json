@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1033960115720",
+    "project_id": "beyondwash-c2b4f",
+    "storage_bucket": "beyondwash-c2b4f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1033960115720:android:affa81cd222f51f133cbbd",
+        "android_client_info": {
+          "package_name": "com.beyondwash"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1033960115720-cmlr0mf2a80pivrptmevlvn5bjci0qrc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.beyondwash",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "1033960115720-hvpdo28lmkqb3nt2i90t2lj1s6gt2as9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBL7rehr29l-XK6wlMQA5yBq1qJ1hD2xkE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1033960115720-bmv4g5ndddh5hsap5l8h0ccfl33lranu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
