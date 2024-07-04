@@ -7,6 +7,7 @@ import {
   PermissionsAndroid,
   Dimensions,
   Linking,
+  SafeAreaView,
 } from "react-native";
 import Geolocation from "react-native-geolocation-service";
 import MapView, { Marker } from "react-native-maps";
@@ -14,6 +15,9 @@ import ActionSheetAddAddr from "./ActionSheetAddAddr";
 import { useDispatch } from "react-redux";
 import { selectedMarkerLocation } from "../../hooks/Slice";
 import { Platform } from "react-native";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { API_KEY } from "@env";
+import { useRef } from "react";
 
 const { width, height } = Dimensions.get("window");
 
@@ -60,6 +64,8 @@ const App = () => {
   const [locationLoded, setlocationLoded] = useState(false);
   const [location, setLocation] = useState();
   const [Markercoordinate, setMarkercoordinate] = useState();
+  const [showAddress, setShowAdress] = useState(false);
+
   const dispatch = useDispatch();
 
   let regionData = {
@@ -71,6 +77,7 @@ const App = () => {
 
   useEffect(() => {
     getLocation();
+    console.log(API_KEY);
   }, []);
 
   const getLocation = () => {
@@ -123,7 +130,39 @@ const App = () => {
         ]}
         style={[styles.gradient, styles.gradientTop]}
       />
-      <View style={styles.content}>
+      <SafeAreaView>
+        <GooglePlacesAutocomplete
+          placeholder="Type a place"
+          onPress={(data, details = null) => console.log(data, details)}
+          query={{ key: API_KEY, components: "country:in" }}
+          fetchDetails={true}
+          onFail={(error) => console.log(error)}
+          onNotFound={() => console.log("no results")}
+          textInputProps={{
+            onFocus: () => setShowAdress(!showAddress),
+          }}
+          styles={{
+            textInput: {
+              color: "#000",
+            },
+            container: {
+              flex: 0,
+              width: width - 40,
+              marginHorizontal: 20,
+              top: height * 0.05,
+              zIndex: 10,
+            },
+            description: {
+              color: "#000",
+              fontSize: 16,
+            },
+            predefinedPlacesDescription: {
+              color: "#3caf50",
+            },
+          }}
+        />
+      </SafeAreaView>
+      <View style={[styles.content, { top: -400 }]}>
         {locationLoded ? (
           <View style={styles.mapContainer}>
             <MapView
@@ -157,9 +196,11 @@ const App = () => {
           <Text>Loading...</Text>
         )}
       </View>
-      <View style={styles.AddressSheet}>
-        <ActionSheetAddAddr location={Markercoordinate} />
-      </View>
+      {!showAddress && (
+        <View style={styles.AddressSheet}>
+          <ActionSheetAddAddr location={Markercoordinate} />
+        </View>
+      )}
       <LinearGradient
         colors={[
           "transparent",
@@ -195,6 +236,8 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+    top: -200,
+    zIndex: -1,
   },
   mapStyle: {
     width: width,

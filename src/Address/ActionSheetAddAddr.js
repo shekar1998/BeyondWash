@@ -39,12 +39,10 @@ const ActionSheetAddAddr = ({ location, selecedLcation }) => {
   const [selectedAddrType, setselectedAddrType] = useState("Appartment");
   const [selectedFinalAddrType, setselectedFinalAddrType] =
     useState("Appartment");
-  const [completeAddress, setcompleteAddress] = useState(
-    "#183/1, 3rd Cross, Madhura Nagar, Moodalpalya main road, Bangalore"
-  );
-  const [parkingLocation, setparkingLocation] = useState("Primodial Block");
-  const [parkingNumber, setparkingNumber] = useState("00283B");
-  const [pinCode, setpinCode] = useState("560072");
+  const [completeAddress, setcompleteAddress] = useState();
+  const [parkingLocation, setparkingLocation] = useState();
+  const [parkingNumber, setparkingNumber] = useState();
+  const [pinCode, setpinCode] = useState();
   const [Loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const reducer = useSelector((state) => state.globalStore);

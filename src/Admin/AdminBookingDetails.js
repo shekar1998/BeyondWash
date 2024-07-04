@@ -4,6 +4,7 @@ import {
   View,
   Platform,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import React from "react";
 import Header from "../components/Header";
@@ -12,6 +13,7 @@ import BookingCard from "../components/Booking/BookingCard";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
 import { useRoute } from "@react-navigation/native";
+import moment from "moment";
 
 const { width, height } = Dimensions.get("window");
 
@@ -19,24 +21,63 @@ const AdminBookingDetails = () => {
   const dataList = ["All Items", "Active", "Completed", "Pending"]; // Your list of data
   const [selectedItem, setSelectedItem] = useState("All Items");
   const [BookingItem, setBookingItem] = useState([]);
+  const [FilteredBookingItem, setFilteredBookingItem] = useState([]);
+  const [Empty, setEmpty] = useState(false);
+
   const loggedInUser = useSelector(
     (state) => state.globalStore.LoggedInUserData
   );
   const route = useRoute(); // Use useRoute to access the route object
 
-  const handleItemPress = (item) => {
+  const handleItemPress = async (item) => {
     setSelectedItem(item);
+    let filteredData;
     if (item === "All Items") {
-      setBookingItem(route.params.AllBookingData);
+      if (route.params.AllBookingData.length === 0) {
+        setEmpty(true);
+      } else {
+        setEmpty(false);
+        filteredData = route.params.AllBookingData.sort(
+          (a, b) =>
+            new Date(b.BookingDate).getTime() -
+            new Date(a.BookingDate).getTime()
+        );
+      }
+      setFilteredBookingItem(filteredData);
+      setBookingItem(filteredData);
     } else {
-      setBookingItem(
-        route.params.AllBookingData.filter((data) => data.Status === item)
+      let filteredData = await FilteredBookingItem.filter(
+        (data) => data.Status === item
       );
+      if (filteredData.length === 0) {
+        setEmpty(true);
+        setBookingItem(filteredData);
+      } else {
+        setEmpty(false);
+        setBookingItem(filteredData);
+      }
     }
   };
 
   useEffect(() => {
-    setBookingItem(route.params.AllBookingData);
+    let filteredData;
+    if (route.params.AllBookingData.length === 0) {
+      setEmpty(true);
+    } else {
+      setEmpty(false);
+      filteredData = route.params.AllBookingData.sort(
+        (a, b) =>
+          new Date(b.BookingDate).getTime() - new Date(a.BookingDate).getTime()
+      );
+    }
+    // filteredData.map((data) => {
+    //   console.log(
+    //     data.DisplayName,
+    //     moment(data.BookingDate).format("DD/MM/YYYY")
+    //   );
+    // });
+    setFilteredBookingItem(filteredData);
+    setBookingItem(filteredData);
   }, []);
 
   return (
@@ -70,6 +111,17 @@ const AdminBookingDetails = () => {
         isAdmin={loggedInUser.isAdmin}
         loading={false}
       />
+      {Empty && (
+        <View style={styles.ImageContainer}>
+          <Image
+            style={styles.Image}
+            source={{
+              uri: "https://cdni.iconscout.com/illustration/premium/thumb/worker-wash-service-4706305-3937514.png",
+            }}
+          />
+          <Text style={styles.Text}>No Services Available</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -128,5 +180,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#fff",
+  },
+  ImageContainer: {
+    width: width,
+    height: "50%",
+    justifyContent: "space-around",
+    top: -height / 3.5,
+  },
+  Image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+    alignSelf: "center",
+  },
+  Text: {
+    fontSize: height * 0.025,
+    color: "#000",
+    fontWeight: "400",
+    alignSelf: "center",
+    top: -(height * 0.1),
   },
 });

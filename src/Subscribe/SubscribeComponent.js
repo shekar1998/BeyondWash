@@ -4,7 +4,7 @@ import {View, Dimensions, Image, StyleSheet, Text} from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import {useSharedValue} from 'react-native-reanimated';
 import CustomButton from '../components/Button/CustomButton';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {selectedPlanType} from '../../hooks/Slice';
 import {useNavigation} from '@react-navigation/native';
 
@@ -13,13 +13,19 @@ const {width, height} = Dimensions.get('window');
 
 const dataItem = [
   {
-    packagePlan: 'Monthly',
+    packagePlan: 'Daily',
+    Exterior: 'Waterless cleaning for 26 days + 1 Fiber polish + Tyer polish',
+    Interior: '1 Internal cleaning included',
   },
   {
     packagePlan: 'Weekly',
+    Exterior: 'Waterless cleaning for 4 days',
+    Interior: '1 Internal cleaning included',
   },
   {
     packagePlan: 'Alternative days',
+    Exterior: 'Waterless cleaning for 4 days',
+    Interior: '1 Internal cleaning included',
   },
 ];
 
@@ -27,6 +33,12 @@ function CustomCarousel() {
   const progressValue = useSharedValue(0);
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const [ModalPrice, setModalPrice] = React.useState(0);
+
+  const selectedCar = useSelector(
+      (state) => state.globalStore.selectedCarType
+    );
+
 
   const baseOptions = {
     vertical: false,
@@ -39,11 +51,59 @@ function CustomCarousel() {
     navigation.navigate('Booking');
   };
 
+  const handlePrice = (SelectedPackage) => {
+      switch (selectedCar.VehicleType.toLowerCase()) {
+        case 'hatchback': {
+          let FinalPrice =
+            SelectedPackage === 'Daily'
+              ? 899
+              : SelectedPackage === 'Alternative days'
+              ? 499
+              : 250;
+          setModalPrice(FinalPrice);
+          return FinalPrice;
+        }
+        case 'sedan': {
+          let FinalPrice =
+            SelectedPackage === 'Daily'
+              ? 899
+              : SelectedPackage === 'Alternative days'
+              ? 499
+              : 250;
+          setModalPrice(FinalPrice);
+          return FinalPrice;
+        }
+        case 'compact suv': {
+          let FinalPrice =
+            SelectedPackage === 'Daily'
+              ? 549
+              : SelectedPackage === 'Alternative days'
+              ? 1099
+              : 350;
+          setModalPrice(FinalPrice);
+          return FinalPrice;
+        }
+        case 'suv': {
+          let FinalPrice =
+            SelectedPackage === 'Daily'
+              ? 649
+              : SelectedPackage === 'Alternative days'
+              ? 1199
+              : 399;
+          setModalPrice(FinalPrice);
+          return FinalPrice;
+        }
+        default:
+          break;
+      }
+  }
+
   return (
     <View
       style={{
         elevation: 5,
-      }}>
+      }}
+    >
       <Carousel
         style={styles.CarouselContainer}
         {...baseOptions}
@@ -55,13 +115,13 @@ function CustomCarousel() {
         onProgressChange={(_, absoluteProgress) =>
           (progressValue.value = absoluteProgress)
         }
-        mode="parallax"
+        mode='parallax'
         modeConfig={{
           parallaxScrollingScale: 0.9,
           parallaxScrollingOffset: 80,
         }}
         data={dataItem}
-        renderItem={index => (
+        renderItem={(index) => (
           <View style={styles.container}>
             <Text style={styles.DailyPackage}>{index.item.packagePlan}</Text>
             <View style={styles.PackageDetailsContainer}>
@@ -72,7 +132,7 @@ function CustomCarousel() {
                 />
                 <Text style={styles.InteriorHeading}>Exterior</Text>
                 <Text style={styles.InteriorDetails}>
-                  Waterless cleaning 6 days/week
+                  {index.item.Exterior}{' '}
                 </Text>
               </View>
               <View style={styles.PackageDetails}>
@@ -82,12 +142,14 @@ function CustomCarousel() {
                 />
                 <Text style={styles.InteriorHeading}>Interior</Text>
                 <Text style={styles.InteriorDetails}>
-                  Vaccume cleaning once a week
+                  {index.item.Interior}{' '}
                 </Text>
               </View>
             </View>
             <View style={styles.PriceContainer}>
-              <Text style={styles.Price}>1599</Text>
+              <Text style={styles.Price}>
+                {handlePrice(index.item.packagePlan)}
+              </Text>
               <Text style={styles.PricePerMonth}>/- Per Month</Text>
             </View>
             <Text style={styles.GstText}>(Including Gst)</Text>

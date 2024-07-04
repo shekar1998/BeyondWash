@@ -33,43 +33,78 @@ const CalanderModal = ({ mondayDate }) => {
     if (selectedPlan === "Monthly") {
       return {
         incrementDays: 1,
-        noOfDays: 30,
+        noOfDays: 26,
       };
     } else if (selectedPlan === "Weekly") {
       return {
         incrementDays: 1,
-        noOfDays: 5,
+        noOfDays: 4,
       };
     } else {
       return {
         incrementDays: 2,
-        noOfDays: 30,
+        noOfDays: 12,
       };
     }
   };
   const AutoSelectBookingDate = async (selectedDate) => {
     const autoSelectdDays = [];
-    autoSelectdDays.push({
-      date: moment(selectedDate).format("YYYY-MM-DD"),
-      status: "Pending",
-    });
-    const loopValue = await selectLoopValue();
     let modifiedDay = selectedDate;
-    for (let i = 0; i < loopValue.noOfDays; i += loopValue.incrementDays) {
-      if (moment(modifiedDay).day() === 0) {
-        modifiedDay = moment(modifiedDay).add(2, "days");
-        autoSelectdDays.push({
-          date: moment(modifiedDay).format("YYYY-MM-DD"),
-          status: "Pending",
-        });
-      } else {
-        modifiedDay = moment(modifiedDay).add(loopValue.incrementDays, "days");
-        autoSelectdDays.push({
-          date: moment(modifiedDay).format("YYYY-MM-DD"),
-          status: "Pending",
-        });
+    console.log("Enterting", autoSelectdDays);
+
+    if (selectedPlan === "Weekly") {
+      while (autoSelectdDays.length < 4) {
+        console.log(
+          moment(modifiedDay).format("YYYY-MM-DD"),
+          moment(modifiedDay).day(),
+          autoSelectdDays.length
+        );
+        if (moment(modifiedDay).day() === 0) {
+          console.log(moment(modifiedDay), "Adding Sunday");
+
+          autoSelectdDays.push({
+            date: moment(modifiedDay).format("YYYY-MM-DD"),
+            status: "Pending",
+          }); // Add the Sunday to the result array
+        }
+        console.log(
+          moment(modifiedDay).format("YYYY-MM-DD"),
+          "Adding Days to reach Sunday"
+        );
+        modifiedDay = moment(modifiedDay).add(1, "days");
+      }
+    } else {
+      autoSelectdDays.push({
+        date: moment(selectedDate).format("YYYY-MM-DD"),
+        status: "Pending",
+      });
+      const loopValue = await selectLoopValue();
+      for (let i = 0; i < loopValue.noOfDays - 1; i++) {
+        if (moment(modifiedDay).day() === 1) {
+          modifiedDay = moment(modifiedDay).add(2, "days");
+          if (moment(modifiedDay).day() === 1) {
+            modifiedDay = moment(modifiedDay).add(1, "days");
+          }
+          autoSelectdDays.push({
+            date: moment(modifiedDay).format("YYYY-MM-DD"),
+            status: "Pending",
+          });
+        } else {
+          modifiedDay = moment(modifiedDay).add(
+            loopValue.incrementDays,
+            "days"
+          );
+          if (moment(modifiedDay).day() === 1) {
+            modifiedDay = moment(modifiedDay).add(1, "days");
+          }
+          autoSelectdDays.push({
+            date: moment(modifiedDay).format("YYYY-MM-DD"),
+            status: "Pending",
+          });
+        }
       }
     }
+
     const additionalMarkedDates = Object.fromEntries(
       autoSelectdDays?.map((item) => [
         item.date,
@@ -119,7 +154,6 @@ const CalanderModal = ({ mondayDate }) => {
               disableAllTouchEventsForDisabledDays
               markedDates={{
                 ...mondayDate,
-                [selectedDay]: { selected: true, selectedColor: "#2c65e0" },
                 ...nextMonthDays,
               }}
             />

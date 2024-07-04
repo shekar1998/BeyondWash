@@ -82,6 +82,7 @@ const Admin = () => {
         return {
           label: doc.data().displayName,
           value: doc.data().uid,
+          email: doc.data().email,
         };
       });
       const userFeedbackDetails = firestore().collection("userFeedback");

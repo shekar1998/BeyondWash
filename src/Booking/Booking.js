@@ -17,7 +17,7 @@ import EvilIcons from "react-native-vector-icons/EvilIcons";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import CalanderModal from "./CalanderModal";
-import { bookingModalReducer } from "../../hooks/Slice";
+import { bookingModalReducer, selectedPlanType } from "../../hooks/Slice";
 import _ from "lodash";
 import LoadingButton from "../components/Button/LoadingButton";
 import RazorpayCheckout from "react-native-razorpay";
@@ -48,9 +48,13 @@ const Booking = () => {
 
   const selectedCar = useSelector((state) => state.globalStore.selectedCarType);
   const [items, setItems] = useState([
-    { label: "Basic  Internal Clean", value: "Basic  Internal Clean" },
-    { label: "Fabric Polish", value: "Fabric Polish" },
-    { label: "Vaccume Cleaning", value: "Vaccume Cleaning" },
+    { label: "Internal Clean - 49Rs", value: "Internal Clean - 49Rs" },
+    {
+      label: "Faber + Tyer Polish - 199Rs",
+      value: "Faber + Tyer Polish - 199Rs",
+    },
+    { label: "Vaccume Cleaning - 199Rs", value: "Vaccume Cleaning - 199Rs" },
+    { label: "Foam Wash - 299Rs", value: "Foam Wash - 299Rs" },
   ]);
   const [Frequencyitems, setFrequencyItems] = useState([
     { label: "Alternative days", value: "alternative days" },
@@ -59,7 +63,6 @@ const Booking = () => {
   ]);
   const modalView = useSelector((state) => state.globalStore.bookingModal);
 
-  console.log(modalView);
   const [address, setAddress] = useState("");
   const [Loading, setLoading] = useState(false);
   const [modalPrice, setModalPrice] = useState(0);
@@ -81,32 +84,66 @@ const Booking = () => {
     }
   };
 
-  useEffect(() => {
-    performAsyncAction();
+  function PriceCalucation() {
     switch (selectedCar.VehicleType.toLowerCase()) {
       case "hatchback": {
-        setModalPrice(500);
-        break;
+        let FinalPrice =
+          reducer?.selectedPlan === "Daily"
+            ? 899
+            : reducer?.selectedPlan === "Alternative days"
+            ? 499
+            : 250;
+        setModalPrice(FinalPrice);
+        return FinalPrice;
       }
       case "sedan": {
-        setModalPrice(600);
-        break;
+        let FinalPrice =
+          reducer?.selectedPlan === "Daily"
+            ? 899
+            : reducer?.selectedPlan === "Alternative days"
+            ? 499
+            : 250;
+        setModalPrice(FinalPrice);
+        return FinalPrice;
       }
       case "compact suv": {
-        setModalPrice(700);
-        break;
+        let FinalPrice =
+          reducer?.selectedPlan === "Daily"
+            ? 549
+            : reducer?.selectedPlan === "Alternative days"
+            ? 1099
+            : 350;
+        setModalPrice(FinalPrice);
+        return FinalPrice;
       }
       case "suv": {
-        setModalPrice(800);
-        break;
+        let FinalPrice =
+          reducer?.selectedPlan === "Daily"
+            ? 649
+            : reducer?.selectedPlan === "Alternative days"
+            ? 1199
+            : 399;
+        setModalPrice(FinalPrice);
+        return FinalPrice;
       }
-      case "luxury": {
-        setModalPrice(900);
-        break;
+      case "cruiser": {
+        let FinalPrice =
+          reducer?.selectedPlan === "Daily"
+            ? 649
+            : reducer?.selectedPlan === "Alternative days"
+            ? 1199
+            : 399;
+        setModalPrice(FinalPrice);
+        return FinalPrice;
       }
       default:
         break;
     }
+  }
+
+  useEffect(() => {
+    performAsyncAction();
+    PriceCalucation();
     return () => {
       StatusBar.setBarStyle("default");
     };
@@ -154,7 +191,6 @@ const Booking = () => {
   };
 
   const showDatePicker = () => {
-    console.log("WORKING");
     dispatch(
       bookingModalReducer({
         status: true,
@@ -164,24 +200,27 @@ const Booking = () => {
   };
 
   const handleGetStarted = async () => {
-    const imgURL =
-      "https://m.media-amazon.com/images/I/61L5QgPvgqL._AC_UF1000,1000_QL80_.jpg";
-    let options = {
-      description: "Credits towards consultation",
-      image: imgURL, //require('../../images.png')
-      currency: "INR", //In USD - only card option will exist rest(like wallet, UPI, EMI etc) will hide
+    console.log(modalPrice);
+    RazorpayCheckout.open({
+      description: "Credits towards subscription",
+      image: selectedCar.VehicleImage,
+      currency: "INR",
       key: RAZORPAY_KEY,
-      amount: (modalPrice - (modalPrice / 100) * 10) * 100,
+      amount: modalPrice * 100,
       name: "Beyond Wash",
-      order_id: "", //Replace this with an order_id(response.data.orderId) created using Orders API.
+      order_id: "",
       prefill: {
         email: reducer.LoggedInUserData.email,
         contact: reducer.LoggedInUserData.mobileNumber,
         name: reducer.LoggedInUserData.displayName,
-      }, //if prefill is not provided then on razorpay screen it has to be manually entered.
+      },
       theme: { color: "#2463eb" },
-    };
-    RazorpayCheckout.open(options)
+      modal: {
+        animation: true,
+        backdropclose: true,
+        confirm_close: true,
+      },
+    })
       .then((data) => {
         navigation.navigate("SubscribeSuccess", {
           bookingDetails: {
@@ -193,8 +232,8 @@ const Booking = () => {
             CurrentScheduledDate: modalView.dateSelected,
             Frequency: Frequencyvalue,
             FutureScheduledDate: modalView.dateSelected,
-            OriginalPrice: 10,
-            Price: 230,
+            OriginalPrice: 1,
+            Price: modalPrice,
             StartsFrom: modalView.dateSelected,
             Status: "Active",
             UserEmail: reducer.LoggedInUserData.email,
@@ -237,6 +276,44 @@ const Booking = () => {
       setAddress(tempAdd);
     }
   };
+
+  const handleDelete = async (handleDelete) => {
+    setValue(() => value.filter((data) => data !== handleDelete));
+  };
+
+  const addOnService = async () => {
+    let price = 0;
+    price = await PriceCalucation();
+    console.log(price);
+    if (value.length > 0) {
+      value.map(async (data) => {
+        if (data === "Internal Clean - 49Rs") {
+          price = price + 49;
+          console.log("Internal Clean - 49Rs", price);
+          setModalPrice(price);
+        } else if (data === "Faber + Tyer Polish - 199Rs") {
+          price = price + 199;
+          console.log("Faber + Tyer Polish - 199Rs", price);
+          setModalPrice(price);
+        } else if (data === "Vaccume Cleaning - 199Rs") {
+          price = price + 199;
+          console.log("Vaccume Cleaning - 199Rs", price);
+          setModalPrice(price);
+        } else if (data === "Foam Wash - 299Rs") {
+          price = price + 299;
+          console.log("Foam Wash - 299Rs", price);
+          setModalPrice(price);
+        }
+      });
+    } else {
+      const price = await PriceCalucation();
+      setModalPrice(price);
+    }
+  };
+
+  useEffect(() => {
+    addOnService();
+  }, [value]);
 
   return (
     <View style={styles.container}>
@@ -284,12 +361,9 @@ const Booking = () => {
         dropDownContainerStyle={styles.dropDownContainerStyle}
         renderBadgeItem={(item) => {
           return (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => +item.value}
-              style={styles.ItemContainer}
-            >
+            <TouchableOpacity activeOpacity={0.7} style={styles.ItemContainer}>
               <MaterialIcons
+                onPress={() => handleDelete(item.label)}
                 style={styles.Icon}
                 name="cancel"
                 size={15}
@@ -316,6 +390,7 @@ const Booking = () => {
         setOpen={setFrequencyOpen}
         setValue={setFrequencyValue}
         setItems={setFrequencyItems}
+        onSelectItem={(item) => dispatch(selectedPlanType(item.label))}
         placeholder="Select an option"
         mode="BADGE"
         style={styles.DropDownStyle}
@@ -359,7 +434,11 @@ const Booking = () => {
           placeholderTextColor={"#000"}
           style={styles.input}
           editable={false}
-          value={modalView.dateSelected.length + " Days got selected"}
+          value={
+            typeof modalView.dateSelected.length === "undefined"
+              ? "Please select a date"
+              : modalView.dateSelected.length + " Days got selected"
+          }
           underlineColorAndroid="transparent"
         />
       </TouchableOpacity>
@@ -380,10 +459,8 @@ const Booking = () => {
               </Text>
             </View>
             <View style={styles.PriceContainer}>
-              <Text style={styles.StrikePrice}>{modalPrice}</Text>
-              <Text style={styles.Price}>
-                {modalPrice - (modalPrice / 100) * 10}
-              </Text>
+              <Text style={styles.StrikePrice}>{modalPrice + 100} </Text>
+              <Text style={styles.Price}>{modalPrice}</Text>
               <Text style={styles.PricePerMonth}>/- Per Wash</Text>
             </View>
             <Text style={styles.GstText}>(Including Gst)</Text>
@@ -416,6 +493,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderColor: "#a8a8a8",
     top: -5,
+    fontSize: height * 0.015,
   },
   ItemContainer: {
     alignItems: "center",
@@ -435,13 +513,15 @@ const styles = StyleSheet.create({
   },
   ItemText: {
     color: "#000",
-    paddingHorizontal: 15,
+    paddingHorizontal: height * 0.01,
     fontWeight: "500",
+    fontSize: height * 0.014,
   },
   dropDownContainerStyle: {
     borderWidth: 0,
     elevation: 10,
     backgroundColor: "#fff",
+    fontSize: height * 0.014,
   },
   textColor: {
     color: "#000",
@@ -450,8 +530,8 @@ const styles = StyleSheet.create({
   LableText: {
     color: "#000",
     textAlign: "left",
-    paddingHorizontal: 10,
-    fontSize: height * 0.019,
+    paddingHorizontal: height * 0.012,
+    fontSize: height * 0.017,
     paddingVertical: 5,
     marginTop: height * 0.018,
     fontWeight: "500",
@@ -459,7 +539,7 @@ const styles = StyleSheet.create({
   AddrssListItemContainer: {
     flexDirection: "row",
     paddingHorizontal: 5,
-    paddingVertical: 10,
+    paddingVertical: height * 0.012,
   },
   NoAddrssListItemContainer: {
     flexDirection: "row",
@@ -472,7 +552,7 @@ const styles = StyleSheet.create({
     borderColor: "#a8a8a8",
     color: "#000",
     fontWeight: "700",
-    fontSize: height * 0.018,
+    fontSize: height * 0.015,
     left: 8,
   },
   MainPriceContainer: {
@@ -490,11 +570,11 @@ const styles = StyleSheet.create({
   DailyPackage: {
     color: "#000",
     textAlign: "center",
-    fontSize: height * 0.018,
+    fontSize: height * 0.015,
     fontWeight: "800",
   },
   StrikePrice: {
-    fontSize: height * 0.018,
+    fontSize: height * 0.015,
     color: "#000",
     textAlign: "center",
     textAlignVertical: "bottom",
@@ -508,7 +588,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
   },
   Price: {
-    fontSize: height * 0.024,
+    fontSize: height * 0.022,
     color: "#2c65e0",
     textAlign: "center",
     textAlignVertical: "center",
@@ -516,7 +596,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   PricePerMonth: {
-    fontSize: height * 0.018,
+    fontSize: height * 0.015,
     color: "#000",
     textAlign: "center",
     textAlignVertical: "bottom",

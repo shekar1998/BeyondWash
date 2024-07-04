@@ -1,5 +1,13 @@
 import Header from "../components/Header";
-import { StyleSheet, Text, View, TextInput, Dimensions } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Dimensions,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import EvilIcons from "react-native-vector-icons/EvilIcons";
 import DropDownPicker from "react-native-dropdown-picker";
@@ -14,29 +22,17 @@ import { LoginReducerUpdate } from "../../hooks/Slice";
 import { useNavigation } from "@react-navigation/native";
 import LoadingButton from "../components/Button/LoadingButton";
 import { CarConstants } from "./Constants";
+import { Platform } from "react-native";
+import { Keyboard } from "react-native";
+import CustomButton from "../components/Button/CustomButton";
 
 const { width, height } = Dimensions.get("window");
-
-const list = [
-  {
-    id: 1,
-    carImage: "https://www.pngmart.com/files/22/Toyota-Fortuner-PNG-Photo.png",
-    carType: "Hatchback",
-    carExample: "Alto, I10, I20 etc...",
-  },
-  {
-    id: 2,
-    carImage: "https://www.pngmart.com/files/22/Sedan-PNG-Clipart.png",
-    carType: "SUV",
-    carExample: "Ford, Toyota, Corolla, Honda, Civic etc...",
-  },
-];
 
 const AddCar = ({ SelectedVehicleType = "Car" }) => {
   const [brandOpen, setBrandOpen] = useState(false);
   const [modaldOpen, setModalOpen] = useState(false);
 
-  const [regValue, setRegValue] = useState("KA02KE7733");
+  const [regValue, setRegValue] = useState("");
 
   const [brandValue, setBrandValue] = useState([]);
   const [modalValue, setModalValue] = useState([]);
@@ -106,6 +102,21 @@ const AddCar = ({ SelectedVehicleType = "Car" }) => {
       selecteedTypeValue,
       regValue
     );
+    var regex =
+      /^([A-Z]{2}\d{2}[A-Z]{2}\d{4}|[A-Z]{2}\d{2}[A-Z]{1}\d{4}|[A-Z]{2}\d{2}[A-Z]{2}\d{3}|[A-Z]{2}\d{2}[A-Z]{1}\d{3}[A-Z]{1}|[A-Z]{2}\d{2}[A-Z]{1}\d{2}[A-Z]{2})$/;
+    if (regex.test(regValue)) {
+    } else {
+      setLoading(false);
+      Toast.show({
+        type: "error",
+        text1: `Vehicle number is not valid!`,
+        visibilityTime: 2000,
+        style: {
+          backgroundColor: "green",
+        },
+      });
+      return null;
+    }
     if (emptyValues.length > 1) {
       Toast.show({
         type: "error",
@@ -144,7 +155,6 @@ const AddCar = ({ SelectedVehicleType = "Car" }) => {
           },
         ];
       }
-      console.log(updatedCarDetails);
       await firestore()
         .collection("Users")
         .doc(reducer.LoggedInUserData.uid)
@@ -184,159 +194,181 @@ const AddCar = ({ SelectedVehicleType = "Car" }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.DropdownContainer}>
-        <Text style={styles.LableText}>Vehicle Type</Text>
-        <DropDownPicker
-          open={open}
-          value={value}
-          items={items}
-          setOpen={setOpen}
-          setValue={setValue}
-          setItems={setItems}
-          placeholder="Select Vehicle Type"
-          style={styles.DropDownStyle}
-          textStyle={styles.textColor}
-          zIndex={100}
-          multiple={false}
-          extendableBadgeContainer={true}
-          dropDownDirection="BOTTOM"
-          placeholderStyle={styles.placeHolderText}
-          onChangeValue={() => setOpen(false)}
-          ArrowDownIconComponent={() => (
-            <EvilIcons
-              style={styles.Icon}
-              name="chevron-down"
-              size={30}
-              color={"#2c65e0"}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.KeyboardContainer}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <Header headerText={"Car Selection"} />
+          <View style={styles.buttonContainer}>
+            <CustomButton
+              customWidth={width / 3.2}
+              title={"Go Back"}
+              FontSize={height * 0.017}
+              customHeight={height * 0.043}
+              PaddingVertical={10}
+              PaddingHorizontal={10}
+              onPress={() => navigation.goBack()}
             />
-          )}
-          ArrowUpIconComponent={() => (
-            <EvilIcons
-              style={styles.Icon}
-              name="chevron-up"
-              size={30}
-              color={"#2c65e0"}
-            />
-          )}
-          dropDownContainerStyle={styles.dropDownContainerStyle}
-        />
-        <Text style={styles.LableText}>Add a Brand</Text>
-        <DropDownPicker
-          open={brandOpen}
-          listMode="FLATLIST"
-          value={brandValue}
-          placeholder="Choose your Brand"
-          items={value === "Car" ? CarModalData : BikeModalData}
-          setOpen={setBrandOpen}
-          setValue={setBrandValue}
-          setItems={setBrandItems}
-          mode="BADGE"
-          style={styles.DropDownStyle}
-          zIndex={12}
-          textStyle={styles.textColor}
-          extendableBadgeContainer={true}
-          placeholderStyle={styles.placeHolderText}
-          ArrowDownIconComponent={() => (
-            <EvilIcons
-              style={styles.Icon}
-              name="chevron-down"
-              size={30}
-              color={"#2c65e0"}
-            />
-          )}
-          ArrowUpIconComponent={() => (
-            <EvilIcons
-              style={styles.Icon}
-              name="chevron-up"
-              size={30}
-              color={"#2c65e0"}
-            />
-          )}
-          onSelectItem={(opt) => setSelecteedBrandValue(opt.label)}
-          dropDownContainerStyle={styles.dropDownContainerStyle}
-        />
-        <Text style={styles.LableText}>Select an Modal</Text>
-        <DropDownPicker
-          open={modaldOpen}
-          value={modalValue}
-          listMode="FLATLIST"
-          placeholder="Choose your Modal"
-          items={modalItems}
-          setOpen={setModalOpen}
-          setValue={setModalValue}
-          setItems={setModalItems}
-          mode="BADGE"
-          style={styles.DropDownStyle}
-          zIndex={11}
-          textStyle={styles.textColor}
-          extendableBadgeContainer={true}
-          placeholderStyle={styles.placeHolderText}
-          ArrowDownIconComponent={() => (
-            <EvilIcons
-              style={styles.Icon}
-              name="chevron-down"
-              size={30}
-              color={"#2c65e0"}
-            />
-          )}
-          ArrowUpIconComponent={() => (
-            <EvilIcons
-              style={styles.Icon}
-              name="chevron-up"
-              size={30}
-              color={"#2c65e0"}
-            />
-          )}
-          onSelectItem={(opt) => {
-            setSelecteedModalValue(opt.label);
-            setSelecteedTypeValue(opt);
-          }}
-          dropDownContainerStyle={styles.dropDownContainerStyle}
-        />
-        {selecteedModalValue && selecteedBrandValue ? (
-          <View style={styles.StatusContainer}>
-            <Text style={styles.LableText}>Select type of vehicle</Text>
-            <Text
-              style={[
-                styles.Lable,
-                {
-                  backgroundColor: "#E0EED0",
-                },
-              ]}
-            >
-              <Text style={styles.Dot}>&#9679; </Text>
-              {selecteedTypeValue.bodyType}
-            </Text>
           </View>
-        ) : null}
-        <Text style={styles.LableText}>Vehicle number</Text>
-        <TextInput
-          style={styles.input}
-          value={regValue}
-          onChangeText={(text) => setRegValue(text)}
-          placeholder={"Reg number"}
-          placeholderTextColor="#AAAAAA"
-          multiline
-        />
-        <View style={styles.button}>
-          <LoadingButton
-            handleSignIn={handleConfirm}
-            text={"Add Vehicle"}
-            loadingProp={Loading}
-          />
+          <View style={styles.DropdownContainer}>
+            <Text style={styles.LableText}>Vehicle Type</Text>
+            <DropDownPicker
+              open={open}
+              value={value}
+              items={items}
+              setOpen={setOpen}
+              setValue={setValue}
+              setItems={setItems}
+              placeholder="Select Vehicle Type"
+              style={styles.DropDownStyle}
+              textStyle={styles.textColor}
+              zIndex={100}
+              multiple={false}
+              extendableBadgeContainer={true}
+              dropDownDirection="BOTTOM"
+              placeholderStyle={styles.placeHolderText}
+              onChangeValue={() => setOpen(false)}
+              ArrowDownIconComponent={() => (
+                <EvilIcons
+                  style={styles.Icon}
+                  name="chevron-down"
+                  size={30}
+                  color={"#2c65e0"}
+                />
+              )}
+              ArrowUpIconComponent={() => (
+                <EvilIcons
+                  style={styles.Icon}
+                  name="chevron-up"
+                  size={30}
+                  color={"#2c65e0"}
+                />
+              )}
+              dropDownContainerStyle={styles.dropDownContainerStyle}
+            />
+            <Text style={styles.LableText}>Add a Brand</Text>
+            <DropDownPicker
+              open={brandOpen}
+              listMode="FLATLIST"
+              value={brandValue}
+              placeholder="Choose your Brand"
+              items={value === "Car" ? CarModalData : BikeModalData}
+              setOpen={setBrandOpen}
+              setValue={setBrandValue}
+              setItems={setBrandItems}
+              mode="BADGE"
+              style={styles.DropDownStyle}
+              zIndex={12}
+              textStyle={styles.textColor}
+              extendableBadgeContainer={true}
+              placeholderStyle={styles.placeHolderText}
+              ArrowDownIconComponent={() => (
+                <EvilIcons
+                  style={styles.Icon}
+                  name="chevron-down"
+                  size={30}
+                  color={"#2c65e0"}
+                />
+              )}
+              ArrowUpIconComponent={() => (
+                <EvilIcons
+                  style={styles.Icon}
+                  name="chevron-up"
+                  size={30}
+                  color={"#2c65e0"}
+                />
+              )}
+              onSelectItem={(opt) => setSelecteedBrandValue(opt.label)}
+              dropDownContainerStyle={styles.dropDownContainerStyle}
+            />
+            <Text style={styles.LableText}>Select an Modal</Text>
+            <DropDownPicker
+              open={modaldOpen}
+              value={modalValue}
+              listMode="FLATLIST"
+              placeholder="Choose your Modal"
+              items={modalItems}
+              setOpen={setModalOpen}
+              setValue={setModalValue}
+              setItems={setModalItems}
+              mode="BADGE"
+              style={styles.DropDownStyle}
+              zIndex={11}
+              textStyle={styles.textColor}
+              extendableBadgeContainer={true}
+              placeholderStyle={styles.placeHolderText}
+              ArrowDownIconComponent={() => (
+                <EvilIcons
+                  style={styles.Icon}
+                  name="chevron-down"
+                  size={30}
+                  color={"#2c65e0"}
+                />
+              )}
+              ArrowUpIconComponent={() => (
+                <EvilIcons
+                  style={styles.Icon}
+                  name="chevron-up"
+                  size={30}
+                  color={"#2c65e0"}
+                />
+              )}
+              onSelectItem={(opt) => {
+                setSelecteedModalValue(opt.label);
+                setSelecteedTypeValue(opt);
+              }}
+              dropDownContainerStyle={styles.dropDownContainerStyle}
+            />
+            {selecteedModalValue && selecteedBrandValue ? (
+              <View style={styles.StatusContainer}>
+                <Text style={styles.LableText}>Select type of vehicle</Text>
+                <Text
+                  style={[
+                    styles.Lable,
+                    {
+                      backgroundColor: "#E0EED0",
+                    },
+                  ]}
+                >
+                  <Text style={styles.Dot}>&#9679; </Text>
+                  {selecteedTypeValue.bodyType}
+                </Text>
+              </View>
+            ) : null}
+            <Text style={styles.LableText}>Vehicle number</Text>
+            <TextInput
+              style={styles.input}
+              value={regValue}
+              onChangeText={(text) => setRegValue(text.toUpperCase())}
+              placeholder={"Reg number"}
+              placeholderTextColor="#AAAAAA"
+              multiline
+            />
+          </View>
+          <View style={styles.button}>
+            <LoadingButton
+              handleSignIn={handleConfirm}
+              text={"Add Vehicle"}
+              loadingProp={Loading}
+            />
+          </View>
         </View>
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 export default AddCar;
 
 const styles = StyleSheet.create({
-  container: {
+  KeyboardContainer: {
     flex: 1,
-    paddingVerticalTop: 20,
+    justifyContent: "space-evenly",
+    top: -height * 0.02,
+  },
+  container: {
     backgroundColor: "#fff",
   },
   input: {
@@ -376,7 +408,8 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   button: {
-    marginVertical: 30,
+    marginBottom: height * 0.2,
+    marginTop: 20,
   },
   success: {
     backgroundColor: "green",
@@ -422,5 +455,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
     borderRadius: 10,
+  },
+  buttonContainer: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 20,
   },
 });

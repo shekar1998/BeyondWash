@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -33,6 +33,7 @@ const { width, height } = Dimensions.get("window");
 const NewHomeScreen = () => {
   const navigation = useNavigation();
   const navigationRef = useRef(null);
+
   const dispatch = useDispatch();
   navigationRef.current = navigation;
   const loggedInUser = useSelector(
@@ -119,8 +120,8 @@ const NewHomeScreen = () => {
       navigation.navigate("CarDetails");
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: `Please add ${finalType} to continue booking🙂`,
+        text1: `Please add ${finalType} to continue booking🙂`,
+        text2: ``,
         visibilityTime: 4000,
         style: {
           backgroundColor: "green",
@@ -224,6 +225,7 @@ const NewHomeScreen = () => {
           <View style={styles.CarouselContainer}>
             <CustomCarousel />
           </View>
+
           <View style={styles.PackageSection}>
             <View style={styles.PackageContainer}>
               <Text style={styles.PackageText}>Packages</Text>
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   CarouselContainer: {
-    top: -height / 5.3,
+    top: -height / 3,
     justifyContent: "center",
     height: height / 4.1,
   },

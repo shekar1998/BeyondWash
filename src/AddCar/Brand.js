@@ -1,6 +1,6 @@
 export const CarModalData = [
   {
-    value: "25",
+    value: "1",
     label: "Mahindra",
     Modal: [
       {
@@ -16,7 +16,7 @@ export const CarModalData = [
     ],
   },
   {
-    value: "17",
+    value: "2",
     label: "Hyundai",
     Modal: [
       {
@@ -32,7 +32,7 @@ export const CarModalData = [
     ],
   },
   {
-    value: "27",
+    value: "3",
     label: "Maruti Suzuki",
     Modal: [
       {
@@ -49,7 +49,7 @@ export const CarModalData = [
     ],
   },
   {
-    value: "45",
+    value: "04",
     label: "Tata",
     Modal: [
       {

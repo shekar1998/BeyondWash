@@ -1,6 +1,4 @@
-import React, { createContext, useState } from "react";
 import auth from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { LoginReducerUpdate } from "../../hooks/Slice";
 import PushNotification from "react-native-push-notification";
 import firestore from "@react-native-firebase/firestore";
@@ -131,23 +129,6 @@ export const signup = async (
     await PushNotification.configure({
       onRegister: async function (token) {
         deviceToken = token;
-        console.log("Token =>", {
-          userDetails: {
-            email: authUser.user.email,
-            signUpTime: new Date().getTime().toString(),
-            deviceToken: token.token,
-            displayName: userName,
-            photoURL:
-              "https://lumiere-a.akamaihd.net/v1/images/h_blackpanther_mobile_19754_57fe2288.jpeg?region=0,0,640,480",
-            address: "address",
-            mobileNumber: mobileNum,
-            isAdmin: false,
-            isEmployee: false,
-            uid: authUser.user.uid,
-            assignedBookings: [],
-          },
-          isAuthenticated: true,
-        });
         userData = {
           userDetails: {
             email: authUser.user.email,
@@ -205,3 +186,98 @@ export const signup = async (
     });
   }
 };
+
+export const googleSignIn = async (userInfo, phone, dispatch) => {
+  const userDocRef = await firestore()
+    .collection("Users")
+    .doc(userInfo.uid)
+    .get();
+  let num;
+  if (userDocRef.exists) {
+    num = userDocRef._data.mobileNumber;
+  } else {
+    num = phone;
+  }
+  await PushNotification.configure({
+    onRegister: async function (token) {
+      deviceToken = token;
+      console.log(userInfo);
+      updateUserData(
+        userInfo.uid,
+        {
+          deviceToken: token.token,
+          displayName: userInfo.displayName,
+          photoURL: userInfo.photoURL,
+          address: "",
+          mobileNumber: num,
+          isAdmin: false,
+          isEmployee: false,
+          uid: userInfo.uid,
+          assignedBookings: [],
+          email: userInfo.email,
+        },
+        false
+      );
+      let userData = {
+        userDetails: {
+          signUpTime: new Date().getTime().toString(),
+          deviceToken: token.token,
+          displayName: userInfo.displayName,
+          photoURL: userInfo.photoURL,
+          address: "",
+          mobileNumber: num,
+          isAdmin: false,
+          isEmployee: false,
+          uid: userInfo.uid,
+          assignedBookings: [],
+          email: userInfo.email,
+        },
+        isAuthenticated: true,
+      };
+
+      await AsyncStorage.setItem(
+        "@last_login_timestamp",
+        JSON.stringify(userData)
+      ); // Set the initial timestamp
+
+      dispatch(LoginReducerUpdate(userData));
+    },
+  });
+};
+// {
+//   "additionalUserInfo":
+//               {
+//                 "isNewUser": false,
+//                 "profile":
+//                       {
+//                         "aud": "722209382173-pdet7klhutl4cnb99e6ron99tv6dmk8a.apps.googleusercontent.com",
+//                         "azp": "722209382173-gtkkrkhagk5lhgfbecb1nh3h0rqhttcr.apps.googleusercontent.com",
+//                         "email": "lathamanju1998@gmail.com",
+//                         "email_verified": true,
+//                         "exp": 1713994509,
+//                         "family_name": "shekar",
+//                         "given_name": "Manjunath",
+//                         "iat": 1713990909, "iss":
+//                         "https://accounts.google.com",
+//                         "name": "Manjunath shekar",
+//                         "picture": "https://lh3.googleusercontent.com/a/ACg8ocKPdI7GDhm8h4A8mUsbaibvNAnmZe4VLsXdDaqmJ_QxdHpQrQA=s96-c",
+//                          "sub": "110492140766725350903"
+//                       },
+//                   "providerId": "google.com"
+//               },
+//   "user":
+//                   {
+//                         "displayName": "Manjunath shekar",
+//                         "email": "lathamanju1998@gmail.com",
+//                         "emailVerified": true,
+//                         "isAnonymous": false,
+//                         "metadata": [Object],
+//                         "multiFactor": [Object],
+//                         "phoneNumber": null,
+//                         "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocKPdI7GDhm8h4A8mUsbaibvNAnmZe4VLsXdDaqmJ_QxdHpQrQA=s96-c",
+//                         "providerData": [Array],
+//                         "providerId": "firebase",
+//                         "tenantId": null,
+//                         "uid": "0YWW1rSqVscW70rKdua9IJkVPY73"
+//                       }
+// }

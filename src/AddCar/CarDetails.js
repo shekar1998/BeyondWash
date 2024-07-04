@@ -6,11 +6,13 @@ import { useDispatch } from "react-redux";
 import AddCar from "./AddCar";
 import CustomButton from "../components/Button/CustomButton";
 import firestore from "@react-native-firebase/firestore";
-import { LoginReducerUpdate } from "../../hooks/Slice";
+import { LoginReducerUpdate, SelectedVehicleUpdate } from "../../hooks/Slice";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DropDownPicker from "react-native-dropdown-picker";
 import EvilIcons from "react-native-vector-icons/EvilIcons";
+import { useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -27,6 +29,7 @@ const CarDetails = () => {
     (state) => state.globalStore.LoggedInUserData
   );
   const isAuth = useSelector((state) => state.globalStore);
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (loggedInUser?.carDetails && loggedInUser?.carDetails.length >= 1) {
@@ -35,6 +38,12 @@ const CarDetails = () => {
       setShowAddCar(true);
     }
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setValue([]);
+    }, [])
+  );
 
   const handleDelete = async (item) => {
     let filteredDeletedData = loggedInUser?.carDetails?.filter(
@@ -78,108 +87,98 @@ const CarDetails = () => {
 
   return (
     <View style={styles.container}>
-      <Header headerText={"Car Selection"} />
-      {loggedInUser?.carDetails && loggedInUser?.carDetails.length >= 1 ? (
-        <View style={styles.AddCarButton}>
-          {showAddCar ? (
-            <CustomButton
-              customWidth={width / 3.2}
-              title={"Go Back"}
-              FontSize={height * 0.017}
-              customHeight={height * 0.043}
-              PaddingVertical={10}
-              PaddingHorizontal={10}
-              onPress={() => {
-                setShowAddCar(!showAddCar);
-              }}
-            />
-          ) : (
-            <DropDownPicker
-              open={open}
-              value={value}
-              items={items}
-              setOpen={setOpen}
-              setValue={setValue}
-              setItems={setItems}
-              placeholder="Add Vehicle"
-              style={styles.DropDownStyle}
-              textStyle={styles.textColor}
-              zIndex={100}
-              multiple={false}
-              extendableBadgeContainer={true}
-              dropDownDirection="BOTTOM"
-              placeholderStyle={styles.placeHolderText}
-              onSelectItem={() => {
-                setOpen(false);
-                setShowAddCar(!showAddCar);
-              }}
-              onChangeValue={() => {
-                setOpen(false);
-                setShowAddCar(!showAddCar);
-              }}
-              ArrowDownIconComponent={() => (
-                <EvilIcons
-                  onPress={() => setOpen(true)}
-                  style={styles.Icon}
-                  name="chevron-down"
-                  size={30}
-                  color={"#fff"}
-                />
-              )}
-              selectedItemLabelStyle={{ color: "#000", fontWeight: "800" }}
-              labelStyle={{ color: "#fff", fontWeight: "800" }}
-              ArrowUpIconComponent={() => (
-                <EvilIcons
-                  onPress={() => setOpen(false)}
-                  style={styles.Icon}
-                  name="chevron-up"
-                  size={30}
-                  color={"#fff"}
-                />
-              )}
-              dropDownContainerStyle={styles.dropDownContainerStyle}
-            />
-          )}
-        </View>
-      ) : null}
       {showAddCar ? (
-        <AddCar SelectedVehicleType={value} />
+        <View style={styles.CarContainer}>
+          <AddCar SelectedVehicleType={value} />
+        </View>
       ) : (
-        loggedInUser?.carDetails?.map((item, index) => (
-          <View key={index}>
-            <View style={styles.ContactContainer}>
-              <View style={styles.contactContainer}>
-                <Image
-                  style={styles.tinyLogo}
-                  source={{
-                    uri: item?.VehicleImage,
+        <View>
+          <Header headerText={"Car Selection"} />
+          {loggedInUser?.carDetails && loggedInUser?.carDetails.length >= 1 ? (
+            <View style={styles.AddCarButton}>
+              {!showAddCar && (
+                <DropDownPicker
+                  open={open}
+                  value={value}
+                  items={items}
+                  setOpen={setOpen}
+                  setValue={setValue}
+                  setItems={setItems}
+                  placeholder="Add Vehicle"
+                  style={styles.DropDownStyle}
+                  textStyle={styles.textColor}
+                  zIndex={100}
+                  multiple={false}
+                  extendableBadgeContainer={true}
+                  dropDownDirection="BOTTOM"
+                  placeholderStyle={styles.placeHolderText}
+                  onSelectItem={() => {
+                    navigation.navigate("AddCar");
+                    dispatch(SelectedVehicleUpdate(value));
                   }}
+                  ArrowDownIconComponent={() => (
+                    <EvilIcons
+                      onPress={() => setOpen(true)}
+                      style={styles.Icon}
+                      name="chevron-down"
+                      size={30}
+                      color={"#fff"}
+                    />
+                  )}
+                  selectedItemLabelStyle={{ color: "#000", fontWeight: "800" }}
+                  labelStyle={{ color: "#fff", fontWeight: "800" }}
+                  ArrowUpIconComponent={() => (
+                    <EvilIcons
+                      onPress={() => setOpen(false)}
+                      style={styles.Icon}
+                      name="chevron-up"
+                      size={30}
+                      color={"#fff"}
+                    />
+                  )}
+                  dropDownContainerStyle={styles.dropDownContainerStyle}
                 />
-              </View>
-              <View style={styles.detailsContainer}>
-                <View style={styles.TextContainer}>
-                  <Text style={styles.nameText}>{item?.VehicleBrand}</Text>
-                  <Text style={styles.detailsText}>
-                    {item?.VehicleModal} | {item?.VehicleType}
-                  </Text>
-                  <Text style={styles.addressText}>{item?.VehicleNumber}</Text>
-                </View>
-                <View style={styles.deleteContainer}>
-                  <CustomButton
-                    customWidth={width / 5}
-                    backgroundColor={"#FF3232"}
-                    title={"Delete"}
-                    FontSize={height * 0.015}
-                    customHeight={height * 0.04}
-                    PaddingVertical={5}
-                    PaddingHorizontal={0}
-                    onPress={() => handleDelete(item)}
+              )}
+            </View>
+          ) : null}
+          {loggedInUser?.carDetails?.map((item, index) => (
+            <View key={index}>
+              <View style={styles.ContactContainer}>
+                <View style={styles.contactContainer}>
+                  <Image
+                    style={styles.tinyLogo}
+                    source={{
+                      uri: item?.VehicleImage,
+                    }}
                   />
+                </View>
+                <View style={styles.detailsContainer}>
+                  <View style={styles.TextContainer}>
+                    <Text style={styles.nameText}>{item?.VehicleBrand}</Text>
+                    <Text style={styles.detailsText}>
+                      {item?.VehicleModal} | {item?.VehicleType}
+                    </Text>
+                    <Text style={styles.addressText}>
+                      {item?.VehicleNumber}
+                    </Text>
+                  </View>
+                  <View style={styles.deleteContainer}>
+                    <CustomButton
+                      customWidth={width / 5}
+                      backgroundColor={"#FF3232"}
+                      title={"Delete"}
+                      FontSize={height * 0.015}
+                      customHeight={height * 0.04}
+                      PaddingVertical={5}
+                      PaddingHorizontal={0}
+                      onPress={() => handleDelete(item)}
+                    />
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
-        ))
+          ))}
+        </View>
       )}
     </View>
   );
@@ -310,5 +309,8 @@ const styles = StyleSheet.create({
     borderColor: "#a8a8a8",
     paddingHorizontal: 15,
     color: "#000",
+  },
+  CarContainer: {
+    flex: 1,
   },
 });

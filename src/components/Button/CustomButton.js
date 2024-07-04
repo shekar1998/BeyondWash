@@ -7,7 +7,9 @@ let buttonWidth,
   customColor,
   customFontSize,
   customPaddingVertical,
-  customPaddingHorizontal;
+  customPaddingHorizontal,
+  customFontColor,
+  CustomFontWeight;
 const CustomButton = ({
   title,
   onPress,
@@ -17,6 +19,8 @@ const CustomButton = ({
   FontSize,
   PaddingHorizontal,
   PaddingVertical,
+  FontColor,
+  FontWeight,
 }) => {
   buttonWidth = typeof customWidth === "undefined" ? width - 40 : customWidth;
   buttonHeight = typeof customHeight === "undefined" ? "auto" : customHeight;
@@ -27,6 +31,8 @@ const CustomButton = ({
     typeof PaddingVertical === "undefined" ? 15 : PaddingVertical;
   customPaddingHorizontal =
     typeof PaddingHorizontal === "undefined" ? 10 : PaddingHorizontal;
+  customFontColor = typeof FontColor === "undefined" ? "#FFFFFF" : FontColor;
+  CustomFontWeight = typeof FontWeight === "undefined" ? "bold" : FontWeight;
 
   return (
     <TouchableOpacity
@@ -44,7 +50,16 @@ const CustomButton = ({
         },
       ]}
     >
-      <Text style={[styles.buttonText, { fontSize: customFontSize }]}>
+      <Text
+        style={[
+          styles.buttonText,
+          {
+            fontSize: customFontSize,
+            color: customFontColor,
+            fontWeight: CustomFontWeight,
+          },
+        ]}
+      >
         {title}
       </Text>
     </TouchableOpacity>

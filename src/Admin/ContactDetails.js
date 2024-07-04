@@ -6,6 +6,7 @@ import {
   Image,
   FlatList,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
@@ -18,7 +19,9 @@ const { width, height } = Dimensions.get("window");
 const ContactDetails = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState();
-  const [contactData, setContactData] = useState([]);
+  const [ContactData, setContactData] = useState([]);
+  const [FilteredContactData, setFilteredContactData] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -29,6 +32,13 @@ const ContactDetails = () => {
       .then((querySnapshot) => {
         setLoading(false);
         setContactData(
+          querySnapshot.docs.map((doc) =>
+            Object.assign(doc.data(), {
+              id: doc.id,
+            })
+          )
+        );
+        setFilteredContactData(
           querySnapshot.docs.map((doc) =>
             Object.assign(doc.data(), {
               id: doc.id,
@@ -68,17 +78,37 @@ const ContactDetails = () => {
     );
   }
 
+  const handleSearch = (text) => {
+    setSearchValue(text);
+    setFilteredContactData(() =>
+      ContactData.filter((data) =>
+        data.displayName.toLowerCase().includes(text.toLowerCase())
+      )
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Header headerText={"User List"} />
       {loading ? (
         <Animation />
       ) : (
-        <FlatList
-          style={styles.renderItem}
-          data={contactData}
-          renderItem={renderItem}
-        />
+        <View style={styles.SearchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchValue}
+            onChangeText={(text) => handleSearch(text)}
+            placeholder={"Start searching...."}
+            placeholderTextColor="#AAAAAA"
+            multiline
+          />
+          <FlatList
+            style={styles.renderItem}
+            data={FilteredContactData}
+            renderItem={renderItem}
+            initialNumToRender={20}
+          />
+        </View>
       )}
     </View>
   );
@@ -168,6 +198,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderColor: "#a8a8a8",
     paddingHorizontal: 15,
+    color: "#000",
+  },
+  searchInput: {
+    borderWidth: 0,
+    borderRadius: 10,
+    width: width - 30,
+    alignSelf: "center",
+    padding: 15,
+    elevation: 10,
+    backgroundColor: "#fff",
+    shadowColor: "#acacac",
     color: "#000",
   },
 });

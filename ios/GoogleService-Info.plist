@@ -3,23 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>1033960115720-pe4dj6sdv9fde1mat5li7ma9rmr0gkbq.apps.googleusercontent.com</string>
+	<string>722209382173-k2bc41t43kbr02jmd6df40j3s10bdhcc.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.1033960115720-pe4dj6sdv9fde1mat5li7ma9rmr0gkbq</string>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>1033960115720-cmlr0mf2a80pivrptmevlvn5bjci0qrc.apps.googleusercontent.com</string>
+	<string>com.googleusercontent.apps.722209382173-k2bc41t43kbr02jmd6df40j3s10bdhcc</string>
 	<key>API_KEY</key>
-	<string>AIzaSyBh8tJVMALDkgjLiy22epVeq9TLB2Mc_qw</string>
+	<string>AIzaSyBGsNPc3jjAYMerOOqbIUrHfdCLzA_GwlQ</string>
 	<key>GCM_SENDER_ID</key>
-	<string>1033960115720</string>
+	<string>722209382173</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.beyondwash</string>
 	<key>PROJECT_ID</key>
-	<string>beyondwash-c2b4f</string>
+	<string>beyondwash2024-63e69</string>
 	<key>STORAGE_BUCKET</key>
-	<string>beyondwash-c2b4f.appspot.com</string>
+	<string>beyondwash2024-63e69.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,8 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1033960115720:ios:3b13bca934e6764a33cbbd</string>
-	<key>DATABASE_URL</key>
-	<string>https://beyondwash-c2b4f-default-rtdb.firebaseio.com</string>
+	<string>1:722209382173:ios:a384b9b32c39cb61c40bf4</string>
 </dict>
 </plist>

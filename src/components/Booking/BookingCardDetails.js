@@ -75,10 +75,12 @@ const BookingCardDetails = () => {
     url: "https://cdn-icons-png.flaticon.com/128/7605/7605498.png",
     uploaded: 0,
   });
-  const [avatarSourceGallery, setavatarSourceGallery] = useState({
-    url: "https://cdn-icons-png.flaticon.com/512/7733/7733592.png",
-    uploaded: 0,
-  });
+  const [avatarSourceGallery, setavatarSourceGallery] = useState([
+    {
+      url: "https://cdn-icons-png.flaticon.com/512/7733/7733592.png",
+      uploaded: 0,
+    },
+  ]);
   const [value, setValue] = useState([]);
   const [EmployeeValue, setEmployeeValue] = useState([]);
   const [items, setItems] = useState([
@@ -114,14 +116,12 @@ const BookingCardDetails = () => {
     setSelectedData(route.params.item);
     setEmployeeItem(route.params.employeeData);
     setmondayDate(disableMondaysForYear(2023));
-    console.log(route.params.employeeData);
   }, []);
 
   const performAsyncAction = async () => {
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     await delay(50);
     setMultipleData(Object.keys(adminModal.dateSelected));
-    console.log("MultipleData", MultipleData);
     if (adminModal.status) {
       StatusBar.setBarStyle("dark-content");
       if (Platform.OS === "android") {
@@ -235,6 +235,7 @@ const BookingCardDetails = () => {
       await ImagePicker.openCamera({
         width: width / 1.5,
         height: width / 1.5,
+        multiple: true,
       })
         .then(async (image) => {
           await setavatarSource({
@@ -250,15 +251,23 @@ const BookingCardDetails = () => {
 
   const handleImageGallery = async () => {
     requestCameraPermission().then(async (res) => {
-      await ImagePicker.openPicker({
+      ImagePicker.openPicker({
         width: width / 1.5,
         height: width / 1.5,
+        multiple: true,
+        maxFiles: 3,
       })
         .then(async (image) => {
-          await setavatarSourceGallery({
-            url: Platform.OS === "ios" ? image.sourceURL : image.path,
-            uploaded: 1,
+          for (let i = avatarSourceGallery.length; i > 0; i--) {
+            avatarSourceGallery.pop();
+          }
+          await image.slice(0, 3).map((data, index) => {
+            avatarSourceGallery.push({
+              url: Platform.OS === "ios" ? data.sourceURL : data.path,
+              uploaded: Number(index + 1),
+            });
           });
+          setavatarSourceGallery([...avatarSourceGallery]);
         })
         .catch((err) => {
           console.log("Image => ", err);
@@ -274,7 +283,6 @@ const BookingCardDetails = () => {
           Geolocation.getCurrentPosition(
             (position) => {
               setlocationLoded(true);
-              console.log("position", position);
               setLocation(position);
             },
             (error) => {
@@ -300,29 +308,22 @@ const BookingCardDetails = () => {
   };
 
   const handleAdminPress = async () => {
-    await firestore()
-      .collection("Bookings")
-      .doc(selectedData.id)
-      .update({
-        ServiceDates: Object.keys(adminModal.dateSelected)?.map((date) => ({
-          date,
-          status: "Pending",
-        })),
-        assighedExpert: selectedExpertDropdown,
-        latestServiceDate: Object.keys(adminModal.dateSelected)[0],
-      });
+    console.log({
+      assighedExpert: selectedExpertDropdown.email,
+      latestServiceDate: selectedData?.CurrentScheduledDate[0].date,
+    });
+    await firestore().collection("Bookings").doc(selectedData.id).update({
+      assighedExpert: selectedExpertDropdown.email,
+      latestServiceDate: selectedData?.CurrentScheduledDate[0].date,
+    });
     const EmployeeCollectionRef = firestore()
       .collection("Users")
       .doc(selectedExpertDropdown.value);
     const EmployeeQuerySnapshot = await EmployeeCollectionRef.get();
     const updatedBookings = {
       ...selectedData,
-      ServiceDates: Object.keys(adminModal.dateSelected)?.map((date) => ({
-        date,
-        status: "Pending",
-      })),
-      assighedExpert: selectedExpertDropdown,
-      latestServiceDate: Object.keys(adminModal.dateSelected)[0],
+      assighedExpert: selectedExpertDropdown.email,
+      latestServiceDate: selectedData?.CurrentScheduledDate[0].date,
     };
     let d = EmployeeQuerySnapshot.data();
     d.assignedBookings.push(updatedBookings); //
@@ -343,7 +344,7 @@ const BookingCardDetails = () => {
 
   const handlUploadImage = async () => {
     try {
-      if (avatarSource.uploaded === 1 && avatarSourceGallery.uploaded === 1) {
+      if (avatarSource.uploaded === 1 && avatarSourceGallery.length >= 1) {
         let fileName1 = avatarSource.url.substring(
           avatarSource?.url.lastIndexOf("/") + 1
         );
@@ -356,19 +357,22 @@ const BookingCardDetails = () => {
           .catch((error) => {
             console.error("Error uploading image:", error);
           });
-        let fileName2 = avatarSourceGallery.url.substring(
-          avatarSourceGallery?.url.lastIndexOf("/") + 1
-        );
-        storage()
-          .ref(`Bookings/${fileName2}`)
-          .putFile(avatarSourceGallery.url)
-          .then((snapshot) => {
-            console.log("Upload successful:", snapshot);
-          })
-          .catch((error) => {
-            console.error("Error uploading image:", error);
-          });
-        return [fileName1, fileName2];
+
+        let multipleFile = [];
+        await avatarSourceGallery.map((data) => {
+          let fileName2 = data.url.substring(data?.url.lastIndexOf("/") + 1);
+          multipleFile.push(fileName2);
+          storage()
+            .ref(`Bookings/${fileName2}`)
+            .putFile(data.url)
+            .then((snapshot) => {
+              console.log("Upload successful:", snapshot);
+            })
+            .catch((error) => {
+              console.error("Error uploading image:", error);
+            });
+        });
+        return [fileName1, multipleFile];
       } else if (avatarSource.uploaded === 1) {
         let fileName = avatarSource.url.substring(
           avatarSource?.url.lastIndexOf("/") + 1
@@ -381,20 +385,28 @@ const BookingCardDetails = () => {
             console.error("Error uploading image:", error);
           });
         return [fileName];
-      } else if (avatarSourceGallery.uploaded === 1) {
-        let fileName = avatarSourceGallery.url.substring(
-          avatarSourceGallery?.url.lastIndexOf("/") + 1
+      }
+      if (avatarSourceGallery.length === 1 || avatarSourceGallery.length >= 1) {
+        console.log("All Files");
+        let fileName = avatarSourceGallery[0].url.substring(
+          avatarSourceGallery[0]?.url.lastIndexOf("/") + 1
         );
-        storage()
-          .ref(`/Bookings/${fileName}`)
-          .putFile(avatarSourceGallery.url)
-          .then((snapshot) => {
-            console.log("Upload successful:", snapshot);
-          })
-          .catch((error) => {
-            console.error("Error uploading image:", error);
-          });
-        return [fileName];
+        let multipleFile = [];
+        await avatarSourceGallery.map((data) => {
+          let fileName2 = data.url.substring(data?.url.lastIndexOf("/") + 1);
+          multipleFile.push(fileName2);
+          storage()
+            .ref(`/Bookings/${fileName}`)
+            .putFile(data.url)
+            .then((snapshot) => {
+              console.log("Upload successful:", snapshot);
+            })
+            .catch((error) => {
+              console.error("Error uploading image:", error);
+            });
+        });
+
+        return [multipleFile];
       }
     } catch (error) {
       console.log(error);
@@ -403,7 +415,7 @@ const BookingCardDetails = () => {
 
   const handleEmployeePress = async () => {
     const imageUploaded = await handlUploadImage();
-    let modifiedDate = selectedData?.ServiceDates?.map((item) => {
+    let modifiedDate = selectedData?.CurrentScheduledDate?.map((item) => {
       if (item.date === selectedData.latestServiceDate) {
         return { ...item, status: value, images: imageUploaded };
       } else {
@@ -413,16 +425,15 @@ const BookingCardDetails = () => {
     const firstPendingItem = modifiedDate?.filter(
       (item) => item?.status === "Pending"
     );
-    console.log("firstPendingItem => ", firstPendingItem);
     try {
       if (firstPendingItem.length === 0) {
         await firestore().collection("Bookings").doc(selectedData.id).update({
           Status: "Completed",
-          ServiceDates: modifiedDate,
+          CurrentScheduledDate: modifiedDate,
         });
       } else {
         await firestore().collection("Bookings").doc(selectedData.id).update({
-          ServiceDates: modifiedDate,
+          CurrentScheduledDate: modifiedDate,
           latestServiceDate: firstPendingItem[0].date,
         });
       }
@@ -442,7 +453,7 @@ const BookingCardDetails = () => {
           if (data.id === selectedData.id) {
             return {
               ...data,
-              ServiceDates: modifiedDate,
+              CurrentScheduledDate: modifiedDate,
               Status: "Completed",
             };
           } else {
@@ -454,7 +465,7 @@ const BookingCardDetails = () => {
           if (data.id === selectedData.id) {
             return {
               ...data,
-              ServiceDates: modifiedDate,
+              CurrentScheduledDate: modifiedDate,
               latestServiceDate: firstPendingItem[0].date,
             };
           } else {
@@ -589,49 +600,19 @@ const BookingCardDetails = () => {
                 })
               : "No add on services seleted"}
           </Text>
-          <Text style={styles.parkingLabel}>Booking Date</Text>
+          <Text style={styles.parkingLabel}>Service Date</Text>
           <Text style={styles.parkingValue}>
-            {selectedData?.BookingDate?.slice(0, 16)}
+            Current Service Date -{" "}
+            <Text style={[styles.parkingValue, { fontWeight: "900" }]}>
+              {selectedData?.latestServiceDate}
+            </Text>
           </Text>
-          {loggedInUser.isEmployee &&
-            (selectedData?.Status === "Completed" ? null : (
-              <View>
-                <Text style={styles.parkingLabel}>Upload Image</Text>
-                <View style={styles.uploadImage}>
-                  <TouchableOpacity
-                    onPress={() => handleImage()}
-                    activeOpacity={0.9}
-                  >
-                    <Image
-                      style={styles.ImageIconImageStyle}
-                      source={{ uri: avatarSource.url }}
-                    />
-                  </TouchableOpacity>
-                  <Text style={styles.parkingLabel}>Or</Text>
-                  <TouchableOpacity
-                    onPress={() => handleImageGallery()}
-                    activeOpacity={0.9}
-                  >
-                    <Image
-                      style={styles.ImageIconImageStyle}
-                      source={{ uri: avatarSourceGallery.url }}
-                    />
-                  </TouchableOpacity>
-                  <CustomButton
-                    onPress={handlUploadImage}
-                    customWidth={width / 4}
-                    title={"Upload"}
-                    customHeight={50}
-                  />
-                </View>
-              </View>
-            ))}
           {loggedInUser.isAdmin && (
-            <Text style={styles.parkingLabel}>Select Booking Dates</Text>
+            <Text style={styles.parkingLabel}>All Booking Dates</Text>
           )}
-          {loggedInUser.isAdmin ? (
-            selectedData?.ServiceDates?.length > 0 ||
-            selectedData?.ServiceDates !== undefined ? (
+          {loggedInUser.isAdmin || loggedInUser.isEmployee ? (
+            selectedData?.CurrentScheduledDate?.length > 0 ||
+            selectedData?.CurrentScheduledDate !== undefined ? (
               <TouchableOpacity
                 activeOpacity={0.4}
                 style={styles.dateContainer}
@@ -669,6 +650,47 @@ const BookingCardDetails = () => {
               </View>
             )
           ) : null}
+          {loggedInUser.isEmployee &&
+            (selectedData?.Status === "Completed" ? null : (
+              <View>
+                <Text style={styles.parkingLabel}>
+                  Upload Image ( 3 Files Max )
+                </Text>
+                <View style={styles.uploadImage}>
+                  <TouchableOpacity
+                    onPress={() => handleImage()}
+                    activeOpacity={0.9}
+                  >
+                    <Image
+                      style={styles.ImageIconImageStyle}
+                      source={{ uri: avatarSource.url }}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.parkingLabel}>Or</Text>
+                  <TouchableOpacity
+                    onPress={() => handleImageGallery()}
+                    activeOpacity={0.9}
+                    style={{ flexDirection: "row" }}
+                  >
+                    {avatarSourceGallery.map((data, index) => {
+                      return (
+                        <Image
+                          key={index}
+                          style={styles.ImageIconImageStyle}
+                          source={{ uri: data.url }}
+                        />
+                      );
+                    })}
+                  </TouchableOpacity>
+                  <CustomButton
+                    onPress={handlUploadImage}
+                    customWidth={width / 4}
+                    title={"Upload"}
+                    customHeight={50}
+                  />
+                </View>
+              </View>
+            ))}
           {loggedInUser.isAdmin
             ? adminModal?.status && (
                 <AdminCalenderModal mondayDate={mondayDate} />
@@ -698,103 +720,43 @@ const BookingCardDetails = () => {
                   : "Assign an Expert"
                 : selectedData?.Status === "Completed"
                 ? "Completed"
-                : "Select Status"}
+                : null}
             </Text>
           )}
-
-          {loggedInUser.isAdmin ? (
-            selectedData?.Status === "Completed" ? null : (
-              <DropDownPicker
-                open={EmployeeOpen}
-                value={EmployeeValue}
-                items={EmployeeItems}
-                setOpen={setEmployeeOpen}
-                setValue={setEmployeeValue}
-                setItems={setEmployeeItem}
-                placeholder="Assign an expert"
-                style={styles.DropDownStyle}
-                textStyle={styles.textColor}
-                badgeDotColors={"red"}
-                mode="BADGE"
-                multiple={false}
-                dropDownDirection="TOP"
-                extendableBadgeContainer={true}
-                placeholderStyle={styles.placeHolderText}
-                onChangeValue={() => setEmployeeOpen(false)}
-                onSelectItem={(item) => setSelectedExpertDropdown(item)}
-                ArrowDownIconComponent={() => (
-                  <EvilIcons
-                    onPress={() => setEmployeeOpen(true)}
-                    style={styles.Icon}
-                    name="chevron-down"
-                    size={30}
-                    color={"#2c65e0"}
-                  />
-                )}
-                ArrowUpIconComponent={() => (
-                  <EvilIcons
-                    onPress={() => setEmployeeOpen(false)}
-                    style={styles.Icon}
-                    name="chevron-up"
-                    size={30}
-                    color={"#2c65e0"}
-                  />
-                )}
-                dropDownContainerStyle={styles.dropDownContainerStyle}
-              />
-            )
-          ) : loggedInUser.isEmployee ? (
-            selectedData?.Status === "Completed" ? null : (
-              <DropDownPicker
-                open={open}
-                value={value}
-                items={items}
-                setOpen={setOpen}
-                setValue={setValue}
-                setItems={setItems}
-                placeholder="Status of the Job"
-                style={styles.DropDownStyle}
-                textStyle={styles.textColor}
-                zIndex={100}
-                multiple={false}
-                extendableBadgeContainer={true}
-                dropDownDirection="TOP"
-                placeholderStyle={styles.placeHolderText}
-                onChangeValue={() => setOpen(false)}
-                ArrowDownIconComponent={() => (
-                  <EvilIcons
-                    onPress={() => setOpen(true)}
-                    style={styles.Icon}
-                    name="chevron-down"
-                    size={30}
-                    color={"#2c65e0"}
-                  />
-                )}
-                ArrowUpIconComponent={() => (
-                  <EvilIcons
-                    onPress={() => setOpen(false)}
-                    style={styles.Icon}
-                    name="chevron-up"
-                    size={30}
-                    color={"#2c65e0"}
-                  />
-                )}
-                dropDownContainerStyle={styles.dropDownContainerStyle}
-              />
-            )
-          ) : null}
         </View>
         <View style={styles.ButtonContainer}>
           {loggedInUser.isAdmin ? (
             selectedData?.Status === "Completed" ? null : (
-              <CustomButton onPress={handleAdminPress} title={"Submit"} />
+              <CustomButton onPress={handleAdminPress} title={"Assign"} />
             )
           ) : loggedInUser.isEmployee ? (
             selectedData?.Status === "Completed" ? null : (
-              <CustomButton
-                onPress={() => handleEmployeePress()}
-                title={"Submit"}
-              />
+              <View style={styles.EmpButtonContainer}>
+                <CustomButton
+                  onPress={() => handleEmployeePress()}
+                  customWidth={width / 3.7}
+                  customHeight={45}
+                  backgroundColor={"#f38a8a"}
+                  FontSize={height * 0.016}
+                  title={"Submit"}
+                />
+                <CustomButton
+                  onPress={() => handleEmployeePress()}
+                  customWidth={"auto"}
+                  customHeight={45}
+                  FontSize={height * 0.016}
+                  backgroundColor={"#e6f0a0"}
+                  FontColor={"#000"}
+                  title={"Vehicle not found"}
+                />
+                <CustomButton
+                  onPress={() => handleEmployeePress()}
+                  customWidth={width / 3.7}
+                  FontSize={height * 0.016}
+                  backgroundColor={"#80c58b"}
+                  title={"Completed"}
+                />
+              </View>
             )
           ) : null}
         </View>
@@ -916,6 +878,7 @@ const styles = StyleSheet.create({
     width: height * 0.065,
     height: height * 0.065,
     resizeMode: "contain",
+    marginHorizontal: 3,
   },
   NavigateToContainer: {
     flexDirection: "row",
@@ -957,6 +920,10 @@ const styles = StyleSheet.create({
   ButtonContainer: {
     marginTop: 30,
     zIndex: 2,
+  },
+  EmpButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
   },
   dateContainer: {
     flexDirection: "row",

@@ -4,6 +4,7 @@ export const mainSlicer = createSlice({
   name: "allReducer",
   initialState: {
     isAuthenticated: false,
+    SelectedVehicle: "",
     LoggedInUserData: {},
     isDrawerOpen: true,
     openActionSheet: {
@@ -31,6 +32,9 @@ export const mainSlicer = createSlice({
     LoginReducerUpdate: (state, action) => {
       state.LoggedInUserData = action.payload.userDetails;
       state.isAuthenticated = action.payload.isAuthenticated;
+    },
+    SelectedVehicleUpdate: (state, action) => {
+      state.SelectedVehicle = action.payload;
     },
     isDrawerOpen: (state, action) => {
       state.isDrawerOpen = action.payload;
@@ -74,6 +78,7 @@ export const {
   userBookingsReducer,
   bookingModalReducer,
   adminBookingModalReducer,
+  SelectedVehicleUpdate,
 } = mainSlicer.actions;
 
 const mainReducer = mainSlicer.reducer;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   Dimensions,
@@ -17,7 +17,7 @@ const { width, height } = Dimensions.get("window");
 
 const SubscribePlan = () => {
   const selectedCar = useSelector((state) => state.globalStore.selectedCarType);
-  console.log(selectedCar);
+
   return (
     <SafeAreaView style={styles.MainContainer}>
       <ScrollView>
@@ -79,6 +79,14 @@ const styles = StyleSheet.create({
     width: width - 10,
     alignSelf: "center",
     paddingVertical: 20,
+  },
+  input: {
+    padding: 10,
+    width: width * 0.95,
+    alignSelf: "center",
+    borderRadius: 4,
+    borderWidth: 0.2,
+    color: "#000",
   },
   Icon: {
     textAlign: "center",
